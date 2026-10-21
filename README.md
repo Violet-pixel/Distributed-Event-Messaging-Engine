@@ -309,7 +309,7 @@ dotnet test tests/Brado.IntegrationTests
 dotnet run -c Release --project benchmarks/Brado.Benchmarks -- --filter "*"
 ```
 
-A integração contínua ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) compila tudo e roda as duas suítes a cada envio. O workflow [`daily-activity.yml`](.github/workflows/daily-activity.yml) registra um checkpoint cinco vezes por dia (09:17, 11:43, 14:08, 16:52 e 20:26, horário de Brasília) em `.github/activity/`, sem disparar o CI.
+A integração contínua ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) compila tudo e roda as duas suítes a cada envio.
 
 ## Segurança e privacidade
 
