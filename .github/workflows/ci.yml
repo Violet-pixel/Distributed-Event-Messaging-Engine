@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".github/activity/**"
+      - "docs/**"
+      - "**/*.md"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restaurar
+        run: dotnet restore Brado.slnx
+
+      - name: Compilar
+        run: dotnet build Brado.slnx -c Release --no-restore
+
+      - name: Testes unitários
+        run: dotnet test tests/Brado.UnitTests/Brado.UnitTests.csproj -c Release --no-build
+
+      - name: Testes de integração (Testcontainers)
+        run: dotnet test tests/Brado.IntegrationTests/Brado.IntegrationTests.csproj -c Release --no-build

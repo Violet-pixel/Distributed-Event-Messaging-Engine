@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Brado.Protocol\Brado.Protocol.csproj" />
+    <ProjectReference Include="..\..\src\Brado.Broker\Brado.Broker.csproj" />
+    <ProjectReference Include="..\..\src\Brado.EventStore\Brado.EventStore.csproj" />
+  </ItemGroup>
+</Project>

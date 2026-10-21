@@ -1,0 +1,68 @@
+name: Registro diário
+
+on:
+  schedule:
+    - cron: "17 12 * * *"
+    - cron: "43 14 * * *"
+    - cron: "8 17 * * *"
+    - cron: "52 19 * * *"
+    - cron: "26 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: registro-diario
+  cancel-in-progress: false
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Registrar checkpoint
+        env:
+          OWNER: ${{ github.repository_owner }}
+          OWNER_ID: ${{ github.repository_owner_id }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git config user.name "$OWNER"
+          git config user.email "${OWNER_ID}+${OWNER}@users.noreply.github.com"
+
+          today="$(TZ=America/Sao_Paulo date +'%Y-%m-%d')"
+          hour="$(TZ=America/Sao_Paulo date +'%H:%M')"
+          month="${today:0:7}"
+          file=".github/activity/${month}.md"
+          mkdir -p .github/activity
+
+          if [ ! -f "$file" ]; then
+            printf '# Registro de atividade · %s\n\n| Data | Hora (BRT) | Execução |\n|---|---|---|\n' "$month" > "$file"
+          fi
+          printf '| %s | %s | #%s |\n' "$today" "$hour" "$GITHUB_RUN_NUMBER" >> "$file"
+
+          messages=(
+            "chore: registra checkpoint de atividade"
+            "docs: atualiza registro diário"
+            "chore: sincroniza log de atividade"
+            "chore: checkpoint de saúde do repositório"
+            "docs: registra execução agendada"
+          )
+          message="${messages[$((RANDOM % ${#messages[@]}))]} (${today} ${hour})"
+
+          git add "$file"
+          git commit -m "$message"
+
+          for attempt in 1 2 3; do
+            if git pull --rebase --quiet origin "$BRANCH" && git push --quiet origin "HEAD:${BRANCH}"; then
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+          exit 1

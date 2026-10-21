@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+TestResults/
+BenchmarkDotNet.Artifacts/
+data/
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+Thumbs.db

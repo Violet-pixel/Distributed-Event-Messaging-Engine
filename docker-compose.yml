@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: brado
+      POSTGRES_PASSWORD: brado
+      POSTGRES_DB: brado
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brado -d brado"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  brado:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      EventStore__Provider: Postgres
+      EventStore__ConnectionString: Host=postgres;Database=brado;Username=brado;Password=brado
+      ReadModel__Provider: Postgres
+      ReadModel__ConnectionString: Host=postgres;Database=brado_read;Username=brado;Password=brado
+      Simulation__Ambient: "true"
+    ports:
+      - "5080:5080"
+      - "7420:7420"
+
+volumes:
+  pgdata:

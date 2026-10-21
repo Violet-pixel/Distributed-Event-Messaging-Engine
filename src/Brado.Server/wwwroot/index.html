@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brado · Painel</title>
+  <meta name="description" content="Painel em tempo real do motor de mensageria Brado: filas, throughput, conexões e replay de eventos.">
+  <link rel="icon" type="image/svg+xml" href="img/brado-logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="img/brado-logo.svg" alt="" width="36" height="36">
+      <div>
+        <h1>Brado</h1>
+        <p>mensageria distribuída · event sourcing · CQRS</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="live" id="live"><i></i><b id="live-label">conectando</b></span>
+      <span class="uptime" id="uptime">—</span>
+      <button class="btn ghost" id="btn-rebuild" title="Apaga o modelo de leitura e reconstrói por replay">Reconstruir projeções</button>
+      <button class="btn solid" id="btn-simulate">Simular tráfego</button>
+      <button class="icon-btn" id="btn-theme" aria-label="Alternar tema">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9A7 7 0 0 1 12 3Z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="kpis" aria-label="Indicadores">
+      <article class="kpi accent">
+        <span class="kpi-label">Entrada</span>
+        <strong class="kpi-value" data-kpi="in">0</strong><small>msg/s</small>
+        <svg class="spark" data-spark="in" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Saída</span>
+        <strong class="kpi-value" data-kpi="out">0</strong><small>msg/s</small>
+        <svg class="spark" data-spark="out" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Conexões ativas</span>
+        <strong class="kpi-value" data-kpi="connections">0</strong><small>tcp</small>
+        <svg class="spark" data-spark="connections" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Eventos gravados</span>
+        <strong class="kpi-value" data-kpi="events">0</strong><small>imutáveis</small>
+        <svg class="spark" data-spark="events" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Outbox pendente</span>
+        <strong class="kpi-value" data-kpi="outbox">0</strong><small>a entregar</small>
+        <svg class="spark" data-spark="outbox" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Lag total</span>
+        <strong class="kpi-value" data-kpi="lag">0</strong><small>mensagens</small>
+        <svg class="spark" data-spark="lag" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+      </article>
+    </section>
+
+    <section class="card chart-card">
+      <header class="card-head">
+        <div>
+          <h2>Taxa de transferência</h2>
+          <p>últimos 2 minutos, amostrado a cada segundo</p>
+        </div>
+        <div class="legend">
+          <span><i class="dot in"></i>publicadas</span>
+          <span><i class="dot out"></i>entregues</span>
+          <span class="totals" id="totals">—</span>
+        </div>
+      </header>
+      <div class="chart-wrap">
+        <svg id="chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-label="Gráfico de throughput">
+          <defs>
+            <linearGradient id="g-in" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--series-in)" stop-opacity=".22"/>
+              <stop offset="1" stop-color="var(--series-in)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <clipPath id="chart-clip"><rect x="0" y="0" width="1000" height="240"/></clipPath>
+          <g id="chart-grid"></g>
+          <g clip-path="url(#chart-clip)">
+            <path id="area-in" fill="url(#g-in)"/>
+            <path id="line-out" fill="none" class="line-out"/>
+            <path id="line-in" fill="none" class="line-in"/>
+          </g>
+          <circle id="head-in" r="4.5" class="head-in"/>
+        </svg>
+        <div class="chart-scale" id="chart-scale"></div>
+      </div>
+    </section>
+
+    <div class="grid two">
+      <section class="card">
+        <header class="card-head">
+          <div><h2>Filas e grupos de consumo</h2><p>offset, retenção, lag e mensagens em voo</p></div>
+          <span class="badge" id="topic-count">0 tópicos</span>
+        </header>
+        <div class="topics" id="topics"><p class="empty">Nenhum tópico ainda. Publique algo ou clique em <b>Simular tráfego</b>.</p></div>
+      </section>
+
+      <section class="card">
+        <header class="card-head">
+          <div><h2>Conexões</h2><p>publishers e subscribers no protocolo TCP</p></div>
+          <span class="badge" id="conn-port">porta —</span>
+        </header>
+        <div class="connections" id="connections"><p class="empty">Sem clientes TCP conectados.</p></div>
+      </section>
+    </div>
+
+    <div class="grid three">
+      <section class="card">
+        <header class="card-head"><div><h2>Event store</h2><p id="store-provider">—</p></div></header>
+        <div class="bars" id="event-types"></div>
+      </section>
+
+      <section class="card">
+        <header class="card-head"><div><h2>Sagas e outbox</h2><p>atendimento do pedido e entrega confiável</p></div></header>
+        <div class="saga-states" id="sagas"></div>
+        <div class="outbox" id="outbox"></div>
+      </section>
+
+      <section class="card">
+        <header class="card-head"><div><h2>Eventos recentes</h2><p>cauda do log global</p></div></header>
+        <ol class="feed" id="feed"></ol>
+      </section>
+    </div>
+
+    <section class="card replay-card">
+      <header class="card-head">
+        <div><h2>Replay de eventos</h2><p>escolha um stream e reproduza o estado versão a versão</p></div>
+        <input class="search" id="stream-search" type="search" placeholder="buscar stream…" autocomplete="off">
+      </header>
+      <div class="replay">
+        <ul class="streams" id="streams"></ul>
+        <div class="timeline-wrap">
+          <div class="replay-toolbar">
+            <span id="replay-title" class="mono muted">nenhum stream selecionado</span>
+            <div class="replay-controls">
+              <button class="btn ghost small" id="btn-step-back" disabled>‹</button>
+              <button class="btn solid small" id="btn-play" disabled>▶ Reproduzir</button>
+              <button class="btn ghost small" id="btn-step" disabled>›</button>
+            </div>
+          </div>
+          <div class="replay-body">
+            <ol class="timeline" id="timeline"></ol>
+            <aside class="state" id="state">
+              <span class="state-label">Estado reconstruído</span>
+              <div class="state-grid" id="state-grid"></div>
+              <pre class="state-data mono" id="state-data"></pre>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Brado · Copyright (©) 2026 Clara Portes</span>
+    <span class="mono" id="foot-info">—</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>

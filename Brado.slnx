@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Brado.Protocol/Brado.Protocol.csproj" />
+    <Project Path="src/Brado.Domain/Brado.Domain.csproj" />
+    <Project Path="src/Brado.Broker/Brado.Broker.csproj" />
+    <Project Path="src/Brado.Client/Brado.Client.csproj" />
+    <Project Path="src/Brado.EventStore/Brado.EventStore.csproj" />
+    <Project Path="src/Brado.Cqrs/Brado.Cqrs.csproj" />
+    <Project Path="src/Brado.Workers/Brado.Workers.csproj" />
+    <Project Path="src/Brado.Server/Brado.Server.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Brado.Demo/Brado.Demo.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Brado.UnitTests/Brado.UnitTests.csproj" />
+    <Project Path="tests/Brado.IntegrationTests/Brado.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Brado.Benchmarks/Brado.Benchmarks.csproj" />
+  </Folder>
+</Solution>
