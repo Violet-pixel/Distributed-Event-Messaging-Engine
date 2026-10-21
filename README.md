@@ -45,19 +45,18 @@ Painel de monitoramento leve, em HTML, CSS e JavaScript puros, servido pelo pró
 - **Filas e grupos de consumo** com offset, retenção, lag, mensagens em voo e membros de cada grupo; as filas de erro aparecem destacadas.
 - **Conexões** TCP com o papel de cada cliente (publisher, subscriber ou os dois) e a fila de saída.
 - **Replay de eventos:** escolha um stream e reproduza o estado do pedido versão a versão, com play, avançar e voltar.
-- Fundo cinza claro, superfícies brancas e bordas finas. O vermelho `#73030D` aparece só no destaque, nos botões principais e na série de entrada do gráfico.
+- Fundo em areia clara, superfícies quase brancas e bordas finas. O grafite `#262621` aparece no texto, nos botões principais e na série de entrada do gráfico, e o taupe `#73675A` no destaque.
 - A marca é sempre em preto e branco.
 - Tema escuro com os mesmos tons, seguindo o sistema ou escolhido no botão do topo, e a escolha fica guardada no navegador.
 - Fonte [Inter](https://rsms.me/inter/), com JetBrains Mono para offsets, tópicos e JSON.
 
 | Cor | Uso |
 |---|---|
-| `#F2F2F2` | Fundo das páginas |
-| `#FFFFFF` | Painéis, cartões e listas |
-| `#8C8C8C` | Textos de apoio e série de saída |
-| `#0D0D0D` | Texto e fundo do tema escuro |
-| `#73030D` | Destaque, botões e série de entrada |
-| `#732F3B` | Lag, assinantes e estados secundários |
+| `#262621` | Texto, botões principais, série de entrada e fundo do tema escuro |
+| `#73675A` | Destaque, cartão de entrada e textos de apoio |
+| `#8C8072` | Lag, série de saída e estados secundários |
+| `#BFBFAE` | Grupos tranquilos, barras e destaque no tema escuro |
+| `#BBB9B3` | Sagas canceladas e detalhes do tema escuro |
 
 | Tela | |
 |---|---|

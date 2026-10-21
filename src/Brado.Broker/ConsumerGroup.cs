@@ -42,6 +42,7 @@ public sealed class ConsumerGroup : ITopicObserver, IAsyncDisposable
         SingleReader = true
     });
     private readonly CancellationTokenSource _cts = new();
+    private int _disposed;
     private readonly Task _pump;
 
     public ConsumerGroup(
@@ -302,6 +303,7 @@ public sealed class ConsumerGroup : ITopicObserver, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
         _signal.Writer.TryComplete();
         await _cts.CancelAsync();
         try { await _pump; } catch (OperationCanceledException) { }

@@ -259,8 +259,8 @@
   }
 
   const sagaColors = {
-    Completed: 'var(--saga-done)', Shipping: 'var(--gray)', ReservingStock: 'var(--wine)', AwaitingPayment: '#b98a91',
-    Compensating: 'var(--crimson)', Compensated: '#a34a55', Cancelled: '#c9c9c9'
+    Completed: 'var(--saga-done)', Shipping: 'var(--clay)', ReservingStock: 'var(--taupe)', AwaitingPayment: 'var(--sage)',
+    Compensating: '#5C5348', Compensated: '#A69C8F', Cancelled: 'var(--stone)'
   };
   const sagaNames = {
     Completed: 'concluídas', Shipping: 'enviando', ReservingStock: 'reservando', AwaitingPayment: 'aguardando pagamento',
@@ -275,7 +275,7 @@
     if (total === 0) bar.insertAdjacentHTML('beforeend', '<i style="flex-grow:1;background:var(--surface-2)"></i>');
     for (const [name, count] of entries) {
       const seg = el('i');
-      seg.style.background = sagaColors[name] ?? 'var(--gray)';
+      seg.style.background = sagaColors[name] ?? 'var(--clay)';
       seg.style.flexGrow = String(count);
       seg.title = `${sagaNames[name] ?? name}: ${count}`;
       bar.appendChild(seg);
@@ -288,7 +288,7 @@
     }
     legend.innerHTML = total === 0
       ? '<span>Nenhuma saga ainda — envie um pedido.</span>'
-      : entries.map(([name, n]) => `<span><i style="background:${sagaColors[name] ?? 'var(--gray)'}"></i>${sagaNames[name] ?? name} <b>${nf.format(n)}</b></span>`).join('');
+      : entries.map(([name, n]) => `<span><i style="background:${sagaColors[name] ?? 'var(--clay)'}"></i>${sagaNames[name] ?? name} <b>${nf.format(n)}</b></span>`).join('');
 
     const failing = outbox.failing > 0;
     $('#outbox').innerHTML = `

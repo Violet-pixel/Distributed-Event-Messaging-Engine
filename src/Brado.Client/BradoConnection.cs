@@ -41,6 +41,7 @@ public sealed class BradoConnection : IAsyncDisposable
     private Task _writeLoop = Task.CompletedTask;
     private Task _keepAlive = Task.CompletedTask;
     private long _correlation;
+    private int _disposed;
 
     private BradoConnection(TcpClient tcp, BradoClientOptions options)
     {
@@ -247,6 +248,7 @@ public sealed class BradoConnection : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
         foreach (var subscription in _subscriptions.Values.ToArray())
             await subscription.DisposeAsync();
 

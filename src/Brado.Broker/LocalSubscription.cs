@@ -12,6 +12,7 @@ internal sealed class LocalSubscription : IDeliveryTarget, IAsyncDisposable
     private readonly ILogger _logger;
     private readonly Channel<Delivery> _channel = Channel.CreateUnbounded<Delivery>(new UnboundedChannelOptions { SingleReader = true });
     private readonly CancellationTokenSource _cts = new();
+    private int _disposed;
     private Task _loop = Task.CompletedTask;
 
     public LocalSubscription(IMessageBroker broker, string topic, string group, long subscriptionId, int prefetch,
@@ -65,6 +66,7 @@ internal sealed class LocalSubscription : IDeliveryTarget, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
         _broker.Unsubscribe(_topic, _group, SubscriptionId);
         _channel.Writer.TryComplete();
         await _cts.CancelAsync();

@@ -39,6 +39,7 @@ public sealed class MessageBroker : IMessageBroker, IAsyncDisposable
     private readonly SemaphoreSlim _initGate = new(1, 1);
     private volatile bool _initialized;
     private long _subscriptionIds;
+    private int _disposed;
 
     public MessageBroker(
         ITopicFactory topicFactory,
@@ -211,6 +212,7 @@ public sealed class MessageBroker : IMessageBroker, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
         foreach (var topic in _topics.Values)
         foreach (var group in topic.Groups)
             await group.DisposeAsync();
