@@ -202,10 +202,10 @@
       return node;
     }, (node, t) => {
       node.querySelector('.topic-name').textContent = t.name;
-      node.querySelector('.topic-meta').textContent = `offset ${nf.format(t.nextOffset)} · retidas ${nf.format(t.retained)}`;
+      node.querySelector('.topic-meta').innerHTML = `<span>offset <b>${nf.format(t.nextOffset)}</b></span><span>retidas <b>${nf.format(t.retained)}</b></span>`;
       const groups = node.querySelector('.groups');
       if (t.groups.length === 0) {
-        groups.innerHTML = '<span class="group-name">sem consumidores — mensagens ficam retidas para replay</span>';
+        groups.innerHTML = '<span class="group-name no-consumer">Sem consumidores. As mensagens ficam retidas para replay.</span>';
         return;
       }
       if (groups.querySelector(':scope > span')) groups.innerHTML = '';
@@ -219,7 +219,7 @@
         bar.style.width = `${Math.max(g.lag > 0 ? 3 : 0, Math.min(100, (g.lag / maxLag) * 100))}%`;
         bar.classList.toggle('calm', g.lag < 50);
         row.querySelector('.group-stats').innerHTML =
-          `lag <b>${nf.format(g.lag)}</b> · voo <b>${nf.format(g.inFlight)}</b> · ${g.members} ${g.members === 1 ? 'membro' : 'membros'}`;
+          `<span>lag <b>${nf.format(g.lag)}</b></span><span>em voo <b>${nf.format(g.inFlight)}</b></span><span>${g.members} ${g.members === 1 ? 'membro' : 'membros'}</span>`;
       });
     });
   }
@@ -233,8 +233,8 @@
     }, (node, c) => {
       node.querySelector('.avatar').textContent = (c.clientName || '?').slice(0, 2).toUpperCase();
       node.querySelector('.conn-name').textContent = c.clientName;
-      node.querySelector('.conn-sub').textContent =
-        `#${c.id} · ↑${nf.format(c.published)} ↓${nf.format(c.delivered)} · ${c.subscriptions} assin. · fila ${c.queuedFrames}`;
+      node.querySelector('.conn-sub').innerHTML =
+        `<span>#${c.id}</span><span title="publicadas">↑${nf.format(c.published)}</span><span title="entregues">↓${nf.format(c.delivered)}</span><span>${c.subscriptions} assin.</span><span>fila ${c.queuedFrames}</span>`;
       const role = node.querySelector('.role');
       role.className = `role ${c.role}`;
       role.textContent = { Publisher: 'publisher', Subscriber: 'subscriber', Both: 'pub + sub', Unknown: 'ocioso' }[c.role] ?? c.role;
@@ -242,7 +242,7 @@
   }
 
   function renderEventTypes(stats, provider) {
-    $('#store-provider').textContent = `${nf.format(stats.events)} eventos em ${nf.format(stats.streams)} streams · ${provider}`;
+    $('#store-provider').textContent = `${nf.format(stats.events)} eventos em ${nf.format(stats.streams)} streams, gravados no ${provider}.`;
     const types = [...stats.byType].sort((a, b) => b.count - a.count).slice(0, 9);
     const max = Math.max(1, ...types.map((t) => t.count));
     const container = $('#event-types');
@@ -259,8 +259,8 @@
   }
 
   const sagaColors = {
-    Completed: 'var(--saga-done)', Shipping: 'var(--clay)', ReservingStock: 'var(--taupe)', AwaitingPayment: 'var(--sage)',
-    Compensating: '#5C5348', Compensated: '#A69C8F', Cancelled: 'var(--stone)'
+    Completed: 'var(--green)', Shipping: 'var(--cobalt)', ReservingStock: 'var(--amber)', AwaitingPayment: 'var(--amber-soft)',
+    Compensating: 'var(--red-soft)', Compensated: 'var(--muted-fill)', Cancelled: 'var(--red)'
   };
   const sagaNames = {
     Completed: 'concluídas', Shipping: 'enviando', ReservingStock: 'reservando', AwaitingPayment: 'aguardando pagamento',
@@ -275,7 +275,7 @@
     if (total === 0) bar.insertAdjacentHTML('beforeend', '<i style="flex-grow:1;background:var(--surface-2)"></i>');
     for (const [name, count] of entries) {
       const seg = el('i');
-      seg.style.background = sagaColors[name] ?? 'var(--clay)';
+      seg.style.background = sagaColors[name] ?? 'var(--muted-fill)';
       seg.style.flexGrow = String(count);
       seg.title = `${sagaNames[name] ?? name}: ${count}`;
       bar.appendChild(seg);
@@ -287,15 +287,27 @@
       bar.after(legend);
     }
     legend.innerHTML = total === 0
-      ? '<span>Nenhuma saga ainda — envie um pedido.</span>'
-      : entries.map(([name, n]) => `<span><i style="background:${sagaColors[name] ?? 'var(--clay)'}"></i>${sagaNames[name] ?? name} <b>${nf.format(n)}</b></span>`).join('');
+      ? '<span>Nenhuma saga ainda. Envie um pedido para começar.</span>'
+      : entries.map(([name, n]) => `<span><i style="background:${sagaColors[name] ?? 'var(--muted-fill)'}"></i>${sagaNames[name] ?? name} <b>${nf.format(n)}</b></span>`).join('');
 
     const failing = outbox.failing > 0;
     $('#outbox').innerHTML = `
       <div><span>pendentes</span><b>${nf.format(outbox.pending)}</b></div>
       <div><span>entregues</span><b>${nf.format(outbox.dispatchedTotal ?? outbox.dispatched)}</b></div>
       <div class="${failing ? 'warn' : ''}"><span>reagendadas</span><b>${nf.format(outbox.failing)}</b></div>
-      <p class="outbox-note">${outbox.lastError ? `última falha: ${esc(outbox.lastError)}` : 'nenhuma falha de entrega — at-least-once com backoff exponencial'}</p>`;
+      <p class="outbox-note">${outbox.lastError ? `última falha: ${esc(outbox.lastError)}` : 'Nenhuma falha de entrega. Entrega at-least-once com backoff exponencial.'}</p>`;
+  }
+
+  // Furos da fita: os 15 bits baixos do número de sequência, em três colunas de 5 canais.
+  function punch(position) {
+    let html = '';
+    for (const shift of [10, 5, 0]) {
+      const bits = (position >> shift) & 31;
+      html += '<span class="col">';
+      for (let bit = 4; bit >= 0; bit--) html += `<i class="${(bits >> bit) & 1 ? 'on' : ''}"></i>`;
+      html += '</span>';
+    }
+    return html;
   }
 
   function renderFeed(events) {
@@ -303,12 +315,12 @@
     const firstRender = state.seenEvents.size === 0;
     keyed(feed, events, (e) => e.position, (e) => {
       const li = el('li', firstRender ? '' : 'new');
-      li.innerHTML = `<span class="pos mono">#${nf.format(e.position)}</span><div><div class="type"></div><div class="stream mono"></div></div><span class="pos"></span>`;
+      li.innerHTML = `<span class="holes" aria-hidden="true">${punch(e.position)}</span><span class="seq">#${nf.format(e.position)}</span><time class="at"></time><span class="type mono"></span><span class="stream mono"></span>`;
       return li;
     }, (li, e) => {
       li.querySelector('.type').textContent = e.eventType;
-      li.querySelector('.stream').textContent = `${e.streamId} · v${e.version}`;
-      li.querySelectorAll('.pos')[1].textContent = time.format(new Date(e.occurredAt));
+      li.querySelector('.stream').innerHTML = `<span class="sid">${esc(e.streamId)}</span> <b>v${e.version}</b>`;
+      li.querySelector('.at').textContent = time.format(new Date(e.occurredAt));
       state.seenEvents.add(e.position);
     });
   }
@@ -334,8 +346,8 @@
     for (const key of Object.keys(state.history)) spark(key, state.history[key]);
 
     setSeries(metrics.series);
-    $('#totals').textContent =
-      `${nf.format(metrics.messagesIn)} publicadas · ${nf.format(metrics.messagesOut)} entregues · ${nf.format(metrics.redelivered)} reentregas · ${nf.format(metrics.deadLettered)} DLQ`;
+    $('#totals').innerHTML =
+      `<span><b>${nf.format(metrics.messagesIn)}</b> publicadas</span><span><b>${nf.format(metrics.messagesOut)}</b> entregues</span><span><b>${nf.format(metrics.redelivered)}</b> reentregas</span><span class="${metrics.deadLettered ? 'dlq' : ''}"><b>${nf.format(metrics.deadLettered)}</b> na DLQ</span>`;
     $('#uptime').textContent = uptime(broker.uptimeSeconds);
 
     renderTopics(broker.topics);
@@ -344,8 +356,8 @@
     renderSagas(snapshot.sagas, snapshot.outbox);
     renderFeed(snapshot.recentEvents);
 
-    $('#foot-info').textContent =
-      `event store ${snapshot.eventStoreProvider} · leitura ${snapshot.readModelProvider} · checkpoint #${nf.format(snapshot.projectionPosition)} · ${nf.format(snapshot.readModel.totalOrders)} pedidos`;
+    $('#foot-info').innerHTML =
+      `<span>event store ${esc(snapshot.eventStoreProvider)}</span><span>leitura ${esc(snapshot.readModelProvider)}</span><span>checkpoint #${nf.format(snapshot.projectionPosition)}</span><span>${nf.format(snapshot.readModel.totalOrders)} pedidos</span>`;
   }
 
   function setLive(mode) {
@@ -482,7 +494,7 @@
       if (s.failed) {
         steps.push(['StockReservationFailed', { reason: 'Item sem estoque no centro de distribuição' }, { status: 'Paid', total, lines: 2, paymentRef: 'PAY-7C1E09A2B4' }]);
         steps.push(['PaymentRefunded', { refundRef: 'REF-3F2A91C48B', amount: total }, { status: 'Paid', total, lines: 2, paymentRef: 'PAY-7C1E09A2B4', refunded: true }]);
-        steps.push(['OrderCancelled', { reason: 'Estoque indisponível — pagamento estornado' }, { status: 'Cancelled', total, lines: 2, paymentRef: 'PAY-7C1E09A2B4', refunded: true, cancellationReason: 'Estoque indisponível — pagamento estornado' }]);
+        steps.push(['OrderCancelled', { reason: 'Estoque indisponível, pagamento estornado' }, { status: 'Cancelled', total, lines: 2, paymentRef: 'PAY-7C1E09A2B4', refunded: true, cancellationReason: 'Estoque indisponível, pagamento estornado' }]);
       } else {
         steps.push(['StockReserved', { reservationRef: 'RSV-91D2C0AA17' }, { status: 'StockReserved', total, lines: 2, paymentRef: 'PAY-7C1E09A2B4' }]);
         steps.push(['OrderShipped', { trackingCode: 'BR482193775BD' }, { status: 'Shipped', total, lines: 2, paymentRef: 'PAY-7C1E09A2B4', trackingCode: 'BR482193775BD' }]);
@@ -521,11 +533,13 @@
     keyed(list, streams, (s) => s.streamId, (s) => {
       const li = el('li');
       li.innerHTML = `<div class="sid mono"></div><div class="sver"></div>`;
+      li.tabIndex = 0;
       li.addEventListener('click', () => selectStream(s.streamId));
+      li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectStream(s.streamId); } });
       return li;
     }, (li, s) => {
       li.querySelector('.sid').textContent = s.streamId;
-      li.querySelector('.sver').textContent = `${s.streamType} · v${s.version} · ${time.format(new Date(s.updatedAt))}`;
+      li.querySelector('.sver').innerHTML = `<span>${esc(s.streamType)}</span><span>v${s.version}</span><span>${time.format(new Date(s.updatedAt))}</span>`;
       li.classList.toggle('active', s.streamId === state.replay.stream);
     });
   }
@@ -546,14 +560,16 @@
     state.replay.steps = data.steps;
     state.replay.index = -1;
     state.replay.prev = null;
-    $('#replay-title').textContent = `${streamId} · ${data.steps.length} eventos`;
+    $('#replay-title').innerHTML = `<span class="mono">${esc(streamId)}</span> <span class="muted">${data.steps.length} eventos</span>`;
 
     const timeline = $('#timeline');
     timeline.innerHTML = '';
     data.steps.forEach((step, i) => {
       const li = el('li');
-      li.innerHTML = `<div class="tl-type">${esc(step.eventType)}</div><div class="tl-meta mono">v${step.version} · #${nf.format(step.position)} · ${time.format(new Date(step.occurredAt))}</div>`;
+      li.innerHTML = `<span class="tl-ver">v${step.version}</span><div class="tl-type mono">${esc(step.eventType)}</div><div class="tl-meta"><span>posição #${nf.format(step.position)}</span><span>${time.format(new Date(step.occurredAt))}</span></div>`;
+      li.tabIndex = 0;
       li.addEventListener('click', () => { stopPlayback(); showStep(i); });
+      li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stopPlayback(); showStep(i); } });
       timeline.appendChild(li);
     });
     ['#btn-play', '#btn-step', '#btn-step-back'].forEach((id) => { $(id).disabled = data.steps.length === 0; });

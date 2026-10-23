@@ -3,12 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Brado · Painel</title>
+  <title>Painel do Brado</title>
   <meta name="description" content="Painel em tempo real do motor de mensageria Brado: filas, throughput, conexões e replay de eventos.">
   <link rel="icon" type="image/svg+xml" href="img/brado-logo.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -17,7 +15,7 @@
       <img src="img/brado-logo.svg" alt="" width="36" height="36">
       <div>
         <h1>Brado</h1>
-        <p>mensageria distribuída · event sourcing · CQRS</p>
+        <p>Motor de mensageria com Event Sourcing e CQRS</p>
       </div>
     </div>
     <div class="top-actions">
@@ -31,9 +29,19 @@
     </div>
   </header>
 
+  <section class="tape-row" aria-labelledby="feed-title">
+    <div class="tape-head">
+      <h2 id="feed-title">Eventos recentes</h2>
+      <p>Cauda do log global. O evento mais novo entra pela esquerda.</p>
+    </div>
+    <div class="tape">
+      <ol class="feed" id="feed"></ol>
+    </div>
+  </section>
+
   <main class="page">
     <section class="kpis" aria-label="Indicadores">
-      <article class="kpi accent">
+      <article class="kpi">
         <span class="kpi-label">Entrada</span>
         <strong class="kpi-value" data-kpi="in">0</strong><small>msg/s</small>
         <svg class="spark" data-spark="in" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
@@ -53,12 +61,12 @@
         <strong class="kpi-value" data-kpi="events">0</strong><small>imutáveis</small>
         <svg class="spark" data-spark="events" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
       </article>
-      <article class="kpi">
+      <article class="kpi pending">
         <span class="kpi-label">Outbox pendente</span>
         <strong class="kpi-value" data-kpi="outbox">0</strong><small>a entregar</small>
         <svg class="spark" data-spark="outbox" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
       </article>
-      <article class="kpi">
+      <article class="kpi pending">
         <span class="kpi-label">Lag total</span>
         <strong class="kpi-value" data-kpi="lag">0</strong><small>mensagens</small>
         <svg class="spark" data-spark="lag" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
@@ -69,20 +77,19 @@
       <header class="card-head">
         <div>
           <h2>Taxa de transferência</h2>
-          <p>últimos 2 minutos, amostrado a cada segundo</p>
+          <p>Últimos 2 minutos, uma amostra por segundo.</p>
         </div>
         <div class="legend">
           <span><i class="dot in"></i>publicadas</span>
           <span><i class="dot out"></i>entregues</span>
-          <span class="totals" id="totals">—</span>
         </div>
       </header>
       <div class="chart-wrap">
         <svg id="chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-label="Gráfico de throughput">
           <defs>
             <linearGradient id="g-in" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="var(--series-in)" stop-opacity=".22"/>
-              <stop offset="1" stop-color="var(--series-in)" stop-opacity="0"/>
+              <stop offset="0" stop-color="var(--series-in)" stop-opacity=".07"/>
+              <stop offset="1" stop-color="var(--series-in)" stop-opacity=".07"/>
             </linearGradient>
           </defs>
           <clipPath id="chart-clip"><rect x="0" y="0" width="1000" height="240"/></clipPath>
@@ -92,68 +99,64 @@
             <path id="line-out" fill="none" class="line-out"/>
             <path id="line-in" fill="none" class="line-in"/>
           </g>
-          <circle id="head-in" r="4.5" class="head-in"/>
+          <circle id="head-in" r="4" class="head-in"/>
         </svg>
         <div class="chart-scale" id="chart-scale"></div>
       </div>
+      <p class="totals" id="totals">—</p>
     </section>
 
     <div class="grid two">
       <section class="card">
         <header class="card-head">
-          <div><h2>Filas e grupos de consumo</h2><p>offset, retenção, lag e mensagens em voo</p></div>
+          <div><h2>Filas e grupos de consumo</h2><p>Offset, retenção, lag e mensagens em voo por grupo.</p></div>
           <span class="badge" id="topic-count">0 tópicos</span>
         </header>
-        <div class="topics" id="topics"><p class="empty">Nenhum tópico ainda. Publique algo ou clique em <b>Simular tráfego</b>.</p></div>
+        <div class="topics" id="topics"><p class="empty">Nenhum tópico ainda. Publique uma mensagem ou clique em <b>Simular tráfego</b>.</p></div>
       </section>
 
       <section class="card">
         <header class="card-head">
-          <div><h2>Conexões</h2><p>publishers e subscribers no protocolo TCP</p></div>
+          <div><h2>Conexões</h2><p>Publishers e subscribers ligados pelo protocolo TCP.</p></div>
           <span class="badge" id="conn-port">porta —</span>
         </header>
-        <div class="connections" id="connections"><p class="empty">Sem clientes TCP conectados.</p></div>
+        <div class="connections" id="connections"><p class="empty">Nenhum cliente TCP conectado.</p></div>
       </section>
     </div>
 
-    <div class="grid three">
+    <div class="grid two">
       <section class="card">
         <header class="card-head"><div><h2>Event store</h2><p id="store-provider">—</p></div></header>
         <div class="bars" id="event-types"></div>
       </section>
 
       <section class="card">
-        <header class="card-head"><div><h2>Sagas e outbox</h2><p>atendimento do pedido e entrega confiável</p></div></header>
+        <header class="card-head"><div><h2>Sagas e outbox</h2><p>Atendimento do pedido e entrega confiável ao broker.</p></div></header>
         <div class="saga-states" id="sagas"></div>
         <div class="outbox" id="outbox"></div>
-      </section>
-
-      <section class="card">
-        <header class="card-head"><div><h2>Eventos recentes</h2><p>cauda do log global</p></div></header>
-        <ol class="feed" id="feed"></ol>
       </section>
     </div>
 
     <section class="card replay-card">
       <header class="card-head">
-        <div><h2>Replay de eventos</h2><p>escolha um stream e reproduza o estado versão a versão</p></div>
-        <input class="search" id="stream-search" type="search" placeholder="buscar stream…" autocomplete="off">
+        <div><h2>Replay de eventos</h2><p>Escolha um stream e reproduza o estado do pedido versão a versão.</p></div>
+        <input class="search" id="stream-search" type="search" placeholder="Buscar stream" aria-label="Buscar stream" autocomplete="off">
       </header>
       <div class="replay">
         <ul class="streams" id="streams"></ul>
         <div class="timeline-wrap">
           <div class="replay-toolbar">
-            <span id="replay-title" class="mono muted">nenhum stream selecionado</span>
+            <span id="replay-title" class="muted">Nenhum stream selecionado</span>
             <div class="replay-controls">
-              <button class="btn ghost small" id="btn-step-back" disabled>‹</button>
+              <button class="btn ghost small" id="btn-step-back" aria-label="Voltar um evento" disabled>‹</button>
               <button class="btn solid small" id="btn-play" disabled>▶ Reproduzir</button>
-              <button class="btn ghost small" id="btn-step" disabled>›</button>
+              <button class="btn ghost small" id="btn-step" aria-label="Avançar um evento" disabled>›</button>
             </div>
           </div>
           <div class="replay-body">
             <ol class="timeline" id="timeline"></ol>
             <aside class="state" id="state">
-              <span class="state-label">Estado reconstruído</span>
+              <h3 class="state-label">Estado reconstruído</h3>
               <div class="state-grid" id="state-grid"></div>
               <pre class="state-data mono" id="state-data"></pre>
             </aside>
@@ -164,8 +167,8 @@
   </main>
 
   <footer class="foot">
-    <span>Brado · Copyright (©) 2026 Clara Portes</span>
-    <span class="mono" id="foot-info">—</span>
+    <p class="foot-brand"><b>Brado 1.1.0</b> <span>Copyright (©) 2026 Clara Portes</span></p>
+    <p class="foot-info" id="foot-info">—</p>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
